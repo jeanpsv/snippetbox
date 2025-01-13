@@ -5,11 +5,9 @@ import (
 	"log/slog"
 	"net/http"
 	"os"
-)
 
-type application struct {
-	logger *slog.Logger
-}
+	"github.com/jeanpsv/snippetbox/config"
+)
 
 func main() {
 	addr := flag.String("addr", ":4000", "HTTP network address")
@@ -20,8 +18,8 @@ func main() {
 		AddSource: true,
 	}))
 
-	app := &application{
-		logger: logger,
+	config := &config.Application{
+		Logger: logger,
 	}
 
 	mux := http.NewServeMux()
@@ -29,10 +27,10 @@ func main() {
 	fileServer := http.FileServer(http.Dir("./ui/static/"))
 	mux.Handle("GET /static/", http.StripPrefix("/static", fileServer))
 
-	mux.HandleFunc("GET /{$}", app.home)
-	mux.HandleFunc("GET /snippet/view/{id}", app.snippetView)
-	mux.HandleFunc("GET /snippet/create", app.snippetCreate)
-	mux.HandleFunc("POST /snippet/create", app.snippetCreatePost)
+	mux.Handle("GET /{$}", Home(config))
+	mux.Handle("GET /snippet/view/{id}", SnippetView(config))
+	mux.Handle("GET /snippet/create", SnippetCreate(config))
+	mux.Handle("POST /snippet/create", SnippetCreatePost(config))
 
 	logger.Info("starting server", "addr", *addr)
 
